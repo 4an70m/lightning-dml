@@ -1,0 +1,10 @@
+<!--
+ - Created by User on 16.07.2018.
+ -->
+
+<aura:component description="dml" controller="Dml">
+
+    <aura:attribute name="context" type="Object"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+
+</aura:component>
