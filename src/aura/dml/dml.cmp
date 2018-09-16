@@ -4,6 +4,7 @@
 
 <aura:component description="dml" controller="Dml">
 
+    <aura:attribute name="showErrorToast" type="Boolean" access="public" default="true" required="false"
+                    description="Determines if dml actions with errors will be handled with an apex toast message"/>
     <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
-
 </aura:component>
