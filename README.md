@@ -8,6 +8,7 @@ Include __dml__ component enywhere in you project (but make sure this component 
 <c:dml/>
 ```
 Start performing dml operations!
+
 __Query__:
 ```js
 yourFunction: function(cmp, evt, helper) {
