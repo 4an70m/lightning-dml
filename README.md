@@ -1,4 +1,4 @@
-# Lightnig-dml
+# Lightning-dml
 Component, which allows you to perform dml operations in lightning without using additional apex controller. Much like force:recordData, but more apex-like, component allows you to perform CRUD but with lists of records.
 Included apex Dml class, which handles all the query logic, also checks object for accessibility, as well as enforces FLS.
 
