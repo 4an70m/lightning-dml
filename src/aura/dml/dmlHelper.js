@@ -4,9 +4,9 @@
 ({
     buildDmlObject: function(cmp, helper) {
         return {
-            query: (query) => {
+            query: (query, isStorable = false, isBackground = false) => {
                 return new Promise($A.getCallback(function (resolve, reject) {
-                    const action = cmp.get("c.query");
+                    const action = cmp.get("c.dmlQuery");
                     action.setParams({"query": query});
                     action.setCallback(this, result => {
                         let state = result.getState();
@@ -19,17 +19,94 @@
                             reject(result);
                         }
                     });
+                    if (isStorable) {
+                        action.setStorable();
+                    }
+                    if (isBackground) {
+                        action.setBackground();
+                    }
                     $A.enqueueAction(action);
                 }))
             },
 
-            update: (sobjects) => {
+            update: (sobjects, isAllOrNothing = true) => {
                 return new Promise($A.getCallback(function (resolve, reject) {
-                    const action = cmp.get("c.performUpdate");
+                    const action = cmp.get("c.dmlUpdate");
                     if (!(sobjects instanceof Array)) {
                         sobjects = [sobjects];
                     }
-                    action.setParams({"sobjects": sobjects});
+                    action.setParams({"sObjects": sobjects, "isAllOrNothing": isAllOrNothing});
+                    action.setCallback(this, result => {
+                        let state = result.getState();
+                        if (state === "SUCCESS") {
+                            resolve(result.getReturnValue());
+                        } else {
+                            if (cmp.get("v.showErrorToast")) {
+                                helper.handleExceptionToast(result, helper);
+                            }
+                            reject(result);
+                        }
+                    });
+                    $A.enqueueAction(action);
+                }));
+            },
+
+            insert: (sobjects, isAllOrNothing = true) => {
+                return new Promise($A.getCallback(function (resolve, reject) {
+                    const action = cmp.get("c.dmlInsert");
+                    if (!(sobjects instanceof Array)) {
+                        sobjects = [sobjects];
+                    }
+                    sobjects = JSON.stringify(sobjects);
+                    console.log(sobjects);
+                    action.setParams({"sObjects": sobjects, "isAllOrNothing": isAllOrNothing});
+                    action.setCallback(this, result => {
+                        let state = result.getState();
+                        if (state === "SUCCESS") {
+                            resolve(result.getReturnValue());
+                        } else {
+                            if (cmp.get("v.showErrorToast")) {
+                                helper.handleExceptionToast(result, helper);
+                            }
+                            reject(result);
+                        }
+                    });
+                    $A.enqueueAction(action);
+                }));
+            },
+
+            upsert: (sobjects, isAllOrNothing = true) => {
+                return new Promise($A.getCallback(function (resolve, reject) {
+                    const action = cmp.get("c.dmlUpsert");
+                    if (!(sobjects instanceof Array)) {
+                        sobjects = [sobjects];
+                    }
+                    action.setParams({"sObjects": sobjects, "isAllOrNothing": isAllOrNothing});
+                    action.setCallback(this, result => {
+                        let state = result.getState();
+                        if (state === "SUCCESS") {
+                            resolve(result.getReturnValue());
+                        } else {
+                            if (cmp.get("v.showErrorToast")) {
+                                helper.handleExceptionToast(result, helper);
+                            }
+                            reject(result);
+                        }
+                    });
+                    $A.enqueueAction(action);
+                }));
+            },
+
+            delete: (sobjects, isAllOrNothing = true) => {
+                return new Promise($A.getCallback(function (resolve, reject) {
+                    const action = cmp.get("c.dmlDelete");
+                    if (!(sobjects instanceof Array)) {
+                        sobjects = [sobjects];
+                    }
+                    if (sobjects.every(item => {return typeof item === "string"})) {
+                        sobjects = sobjects.map(sobjectId => {return {Id: sobjectId}});
+                    }
+                    action.setParams({"sObjects": sobjects, "isAllOrNothing": isAllOrNothing});
                     action.setCallback(this, result => {
                         let state = result.getState();
                         if (state === "SUCCESS") {

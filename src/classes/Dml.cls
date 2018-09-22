@@ -5,22 +5,38 @@
 public with sharing class Dml {
 
     @AuraEnabled
-    public static List<SObject> query(String query) {
+    public static List<SObject> dmlQuery(String query) {
         return new SoqlValidator(query).secureQuery().getResults();
     }
 
     @AuraEnabled
-    public static List<SObject> performUpdate(List<SObject> sobjects) {
-        return new SoqlValidator(sobjects).secureUpdate().getResults();
+    public static List<SObject> dmlInsert(String sObjects, Boolean isAllOrNothing) {
+        List<SObject> parsedObjects = (List<SObject>)JSON.deserializeStrict(sObjects, List<SObject>.class);
+        return new SoqlValidator(parsedObjects).secureInsert(isAllOrNothing).getResults();
+    }
+
+    @AuraEnabled
+    public static List<SObject> dmlUpdate(List<SObject> sObjects, Boolean isAllOrNothing) {
+        return new SoqlValidator(sObjects).secureUpdate(isAllOrNothing).getResults();
+    }
+
+    @AuraEnabled
+    public static List<SObject> dmlUpsert(List<SObject> sObjects, Boolean isAllOrNothing) {
+        return null;
+    }
+
+    @AuraEnabled
+    public static List<SObject> dmlDelete(List<SObject> sObjects, Boolean isAllOrNothing) {
+        return null;
     }
 
     public class SoqlValidator {
 
-        private String soql;
+        private String queryString;
         private List<SObject> results;
 
         public SoqlValidator(String soql) {
-            this.soql = soql;
+            this.queryString = soql;
         }
 
         private SoqlValidator(List<SObject> sObjects) {
@@ -29,7 +45,7 @@ public with sharing class Dml {
 
         public SoqlValidator secureQuery() {
             try {
-                this.results = Database.query(this.soql);
+                this.results = Database.query(this.queryString);
                 if (this.results.isEmpty()) {
                     return this;
                 }
@@ -42,10 +58,16 @@ public with sharing class Dml {
             return this;
         }
 
-        public SoqlValidator unsecuredQuery() {
+        public SoqlValidator secureInsert(Boolean isAllOrNothing) {
+            Savepoint savepoint = Database.setSavepoint();
             try {
-                this.results = Database.query(this.soql);
+                if (this.results.isEmpty()) {
+                    return this;
+                }
+                this.results = new SObjectInsertValidator(this.results).getValidateResult();
+                Database.insert(this.results, isAllOrNothing);
             } catch (Exception ex) {
+                Database.rollback(savepoint);
                 System.debug(ex.getStackTraceString());
                 System.debug(ex.getMessage());
                 throw new AuraHandledException(ex.getMessage());
@@ -53,15 +75,16 @@ public with sharing class Dml {
             return this;
         }
 
-        public SoqlValidator secureUpdate() {
+        public SoqlValidator secureUpdate(Boolean isAllOrNothing) {
+            Savepoint savepoint = Database.setSavepoint();
             try {
                 if (this.results.isEmpty()) {
                     return this;
                 }
                 this.results = new SObjectUpdateValidator(this.results).getValidateResult();
-                System.debug(this.results);
-                Database.update(this.results);
+                Database.update(this.results, isAllOrNothing);
             } catch (Exception ex) {
+                Database.rollback(savepoint);
                 System.debug(ex.getStackTraceString());
                 System.debug(ex.getMessage());
                 throw new AuraHandledException(ex.getMessage());
@@ -69,15 +92,11 @@ public with sharing class Dml {
             return this;
         }
 
-        public SoqlValidator unsecuredUpdate() {
-            try {
-                System.debug(this.results);
-                Database.update(this.results);
-            } catch (Exception ex) {
-                System.debug(ex.getStackTraceString());
-                System.debug(ex.getMessage());
-                throw new AuraHandledException(ex.getMessage());
-            }
+        public SoqlValidator secureUpsert(Boolean isAllOrNothing) {
+            return this;
+        }
+
+        public SoqlValidator secureDelete(Boolean isAllOrNothing) {
             return this;
         }
 
@@ -89,18 +108,12 @@ public with sharing class Dml {
     public abstract class SObjectValidator {
 
         private List<SObject> sObjectsToValidate;
-        private SObjectType sObjectType;
-        private DescribeSObjectResult describedSObjectType;
 
-        public SObjectValidator(List<SObject> sobjectsToValidate) {
-            this.sObjectsToValidate = sobjectsToValidate;
-            System.debug(sobjectsToValidate);
-            this.sObjectType = sobjectsToValidate.getSObjectType();
-            if (this.sObjectType == null && !this.sObjectsToValidate.isEmpty()) {
-                this.sObjectType = this.sObjectsToValidate[0].getSObjectType();
-            }
-            System.debug(this.sObjectType);
-            this.describedSObjectType = this.sObjectType.getDescribe();
+        public SObjectValidator() {
+        }
+
+        public SObjectValidator(List<SObject> sObjectsToValidate) {
+            this.sObjectsToValidate = sObjectsToValidate;
         }
 
         public virtual void validate() {
@@ -129,8 +142,18 @@ public with sharing class Dml {
 
     public class SObjectReadValidator extends SObjectValidator {
 
-        public SObjectReadValidator(List<SObject> sobjectsToValidate) {
-            super(sobjectsToValidate);
+        private SObjectType sObjectType;
+        private DescribeSObjectResult describedSObjectType;
+
+        public SObjectReadValidator(List<SObject> sObjectsToValidate) {
+            super(sObjectsToValidate);
+            System.debug(sObjectsToValidate);
+            this.sObjectType = sObjectsToValidate.getSObjectType();
+            if (this.sObjectType == null && !this.sObjectsToValidate.isEmpty()) {
+                this.sObjectType = this.sObjectsToValidate[0].getSObjectType();
+            }
+            System.debug(this.sObjectType);
+            this.describedSObjectType = this.sObjectType.getDescribe();
         }
 
         protected override void checkObjectAccess() {
@@ -173,28 +196,76 @@ public with sharing class Dml {
         }
     }
 
-    public class SObjectUpdateValidator extends SObjectValidator {
+    public class SObjectInsertValidator extends SObjectValidator {
 
-        public SObjectUpdateValidator(List<SObject> sobjectsToValidate) {
-            super(sobjectsToValidate);
+        public SObjectInsertValidator(List<SObject> sObjectsToValidate) {
+            super(sObjectsToValidate);
         }
 
         protected override void checkObjectAccess() {
-            if (!this.describedSObjectType.isAccessible() || !this.describedSObjectType.isUpdateable()) {
-                throw new System.NoAccessException();
+            for (SObject sobj : this.sObjectsToValidate) {
+                DescribeSObjectResult sobjectDescribe = sobj.getSObjectType().getDescribe();
+                if (!sobjectDescribe.isAccessible() || !sobjectDescribe.isCreateable()) {
+                    throw new System.NoAccessException();
+                }
             }
         }
 
         protected override void checkFieldsAccess() {
             List<SObject> result = new List<SObject>();
-            Map<String, SObjectField> sobjectFields = this.describedSObjectType.fields.getMap();
             for (SObject sobj : this.sObjectsToValidate) {
-                result.add(this.validateSobject(sobj, sobjectFields));
+                result.add(this.validateSobject(sobj));
             }
             this.sObjectsToValidate = result;
         }
 
-        private SObject validateSobject(SObject sobj, Map<String, SObjectField> sobjectFields) {
+        private SObject validateSobject(SObject sobj) {
+            Map<String, SObjectField> sobjectFields = sobj.getSObjectType().getDescribe().fields.getMap();
+            Map<String, Object> sobjectPopulatedFields = new Map<String, Object>(sobj.getPopulatedFieldsAsMap());
+            for (String fieldName : sobjectPopulatedFields.keySet()) {
+                System.debug('Field Name: ' + fieldName);
+                SObjectField sobjectField = sobjectFields.get(fieldName);
+                DescribeFieldResult fieldDescribe = sobjectField.getDescribe();
+                if (sobjectField == null) {
+                    System.debug('Invalid field: ' + fieldName);
+                    throw new AuraHandledException('Invalid field: ' + fieldName);
+                } else if (!fieldDescribe.isAccessible() || !fieldDescribe.isCreateable()) {
+                    System.debug('Not creatable field: ' + fieldName);
+                    sobjectPopulatedFields.remove(fieldName);
+                    continue;
+                }
+                System.debug('Creatable field: ' + fieldName);
+            }
+            Type sobjectType = Type.forName(sobj.getSObjectType().getDescribe().getName());
+            return (SObject) JSON.deserialize(JSON.serialize(sobjectPopulatedFields), sobjectType);
+        }
+    }
+
+    public class SObjectUpdateValidator extends SObjectValidator {
+
+        public SObjectUpdateValidator(List<SObject> sObjectsToValidate) {
+            super(sObjectsToValidate);
+        }
+
+        protected override void checkObjectAccess() {
+            for (SObject sobj : this.sObjectsToValidate) {
+                DescribeSObjectResult sobjectDescribe = sobj.getSObjectType().getDescribe();
+                if (!sobjectDescribe.isAccessible() || !sobjectDescribe.isQueryable()) {
+                    throw new System.NoAccessException();
+                }
+            }
+        }
+
+        protected override void checkFieldsAccess() {
+            List<SObject> result = new List<SObject>();
+            for (SObject sobj : this.sObjectsToValidate) {
+                result.add(this.validateSobject(sobj));
+            }
+            this.sObjectsToValidate = result;
+        }
+
+        private SObject validateSobject(SObject sobj) {
+            Map<String, SObjectField> sobjectFields = sobj.getSObjectType().getDescribe().fields.getMap();
             Map<String, Object> sobjectPopulatedFields = new Map<String, Object>(sobj.getPopulatedFieldsAsMap());
             for (String fieldName : sobjectPopulatedFields.keySet()) {
                 System.debug('Field Name: ' + fieldName);
@@ -213,8 +284,7 @@ public with sharing class Dml {
                 }
                 System.debug('Updatable field: ' + fieldName);
             }
-            String typeName = this.describedSObjectType.getName();
-            Type sobjectType = Type.forName(typeName);
+            Type sobjectType = Type.forName(sobj.getSObjectType().getDescribe().getName());
             return (SObject) JSON.deserialize(JSON.serialize(sobjectPopulatedFields), sobjectType);
         }
     }
