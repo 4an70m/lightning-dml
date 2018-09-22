@@ -25,8 +25,8 @@ __Insert__:
 ```js
 yourFunction: function(cmp, evt, helper) {
     ...
-    let accountToUpdate = {"attributes":{"type":"Account"}, "Name": "Test"};
-    dml.insert(accountToUpdate)
+    let accountToInsert = {"attributes":{"type":"Account"}, "Name": "Test"};
+    dml.insert(accountToInsert)
     .then($A.getCallback(result => {
         console.log(result); //[{Id: "new_record_id", Name: "Test"}]
     }));
