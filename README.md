@@ -13,9 +13,22 @@ __Query__:
 ```js
 yourFunction: function(cmp, evt, helper) {
     ...
-     dml.query("SELECT Id FROM Account")
+    dml.query("SELECT Id FROM Account")
     .then($A.getCallback(result => {
         console.log(result);
+    }));
+    ...
+}
+```
+
+__Insert__:
+```js
+yourFunction: function(cmp, evt, helper) {
+    ...
+    let accountToUpdate = {"attributes":{"type":"Account"}, "Name": "Test"};
+    dml.insert(accountToUpdate)
+    .then($A.getCallback(result => {
+        console.log(result); //[{Id: "new_record_id", Name: "Test"}]
     }));
     ...
 }
@@ -25,7 +38,7 @@ __Update__:
 ```js
 yourFunction: function(cmp, evt, helper) {
     ...
-     dml.update({Id: "someId", Name: "New name"})
+    dml.update({Id: "someId", Name: "New name"})
     .then($A.getCallback(result => {
         console.log(result);
     }));
@@ -35,11 +48,11 @@ yourFunction: function(cmp, evt, helper) {
 
 ### Todos
 
- - Add other actions of CRUD (upsert, delete)
+ - Add other actions of CRUD (upsert, delete) (50%)
  - Add CRUD actions result response
- - Refactor apex class
+ - Refactor apex class (30%)
  - Update reject error message
- - Update readme
+ - Update readme (40%)
  - Add apex tests
 
 License
