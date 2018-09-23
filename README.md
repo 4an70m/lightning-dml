@@ -38,7 +38,7 @@ __Update__:
 ```js
 yourFunction: function(cmp, evt, helper) {
     ...
-    dml.update({Id: "someId", Name: "New name"})
+    dml.update({Id: "recordId", Name: "New name"})
     .then($A.getCallback(result => {
         console.log(result);
     }));
@@ -46,11 +46,23 @@ yourFunction: function(cmp, evt, helper) {
 }
 ```
 
+__Usert__:
+```js
+yourFunction: function(cmp, evt, helper) {
+    ...
+    let accountToInsert = {"attributes":{"type":"Account"}, "Name": "Test"};
+    let accountToUpdate = {"attributes":{"type":"Account"}, "Id": "recordId", "Name": "Test"};
+    dml.upsert([accountToUpdate, accountToInsert])
+        console.log(result);
+    }));
+    ...
+}
+```
 ### Todos
 
- - Add other actions of CRUD (upsert, delete) (50%)
+ - Add other actions of CRUD (delete) (75%)
  - Add CRUD actions result response
- - Refactor apex class (30%)
+ - Refactor apex class (45%)
  - Update reject error message
  - Update readme (40%)
  - Add apex tests
