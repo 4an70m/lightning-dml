@@ -4,7 +4,7 @@
 ({
     buildDmlObject: function(cmp, helper) {
         return {
-            query: (query, isStorable = false, isBackground = false) => {
+            query: (query) => {
                 return new Promise($A.getCallback(function (resolve, reject) {
                     const action = cmp.get("c.dmlQuery");
                     action.setParams({"query": query});
@@ -19,12 +19,6 @@
                             reject(result);
                         }
                     });
-                    if (isStorable) {
-                        action.setStorable();
-                    }
-                    if (isBackground) {
-                        action.setBackground();
-                    }
                     $A.enqueueAction(action);
                 }))
             },
@@ -32,7 +26,7 @@
             update: (sobjects, isAllOrNothing = true) => {
                 return new Promise($A.getCallback(function (resolve, reject) {
                     const action = cmp.get("c.dmlUpdate");
-                    if (!(sobjects instanceof Array)) {
+                    if (!$A.util.isArray(sobjects)) {
                         sobjects = [sobjects];
                     }
                     action.setParams({"sObjects": sobjects, "isAllOrNothing": isAllOrNothing});
@@ -54,7 +48,7 @@
             insert: (sobjects, isAllOrNothing = true) => {
                 return new Promise($A.getCallback(function (resolve, reject) {
                     const action = cmp.get("c.dmlInsert");
-                    if (!(sobjects instanceof Array)) {
+                    if (!$A.util.isArray(sobjects)) {
                         sobjects = [sobjects];
                     }
                     sobjects = JSON.stringify(sobjects);
@@ -78,9 +72,10 @@
             upsert: (sobjects, isAllOrNothing = true) => {
                 return new Promise($A.getCallback(function (resolve, reject) {
                     const action = cmp.get("c.dmlUpsert");
-                    if (!(sobjects instanceof Array)) {
+                    if (!$A.util.isArray(sobjects)) {
                         sobjects = [sobjects];
                     }
+                    sobjects = JSON.stringify(sobjects);
                     action.setParams({"sObjects": sobjects, "isAllOrNothing": isAllOrNothing});
                     action.setCallback(this, result => {
                         let state = result.getState();
@@ -100,7 +95,7 @@
             delete: (sobjects, isAllOrNothing = true) => {
                 return new Promise($A.getCallback(function (resolve, reject) {
                     const action = cmp.get("c.dmlDelete");
-                    if (!(sobjects instanceof Array)) {
+                    if (!$A.util.isArray(sobjects)) {
                         sobjects = [sobjects];
                     }
                     if (sobjects.every(item => {return typeof item === "string"})) {

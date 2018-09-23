@@ -21,8 +21,9 @@ public with sharing class Dml {
     }
 
     @AuraEnabled
-    public static List<SObject> dmlUpsert(List<SObject> sObjects, Boolean isAllOrNothing) {
-        return null;
+    public static List<SObject> dmlUpsert(String sObjects, Boolean isAllOrNothing) {
+        List<SObject> parsedObjects = (List<SObject>)JSON.deserializeStrict(sObjects, List<SObject>.class);
+        return new SoqlValidator(parsedObjects).secureUpsert(isAllOrNothing).getResults();
     }
 
     @AuraEnabled
@@ -64,8 +65,11 @@ public with sharing class Dml {
                 if (this.results.isEmpty()) {
                     return this;
                 }
-                this.results = new SObjectInsertValidator(this.results).getValidateResult();
-                Database.insert(this.results, isAllOrNothing);
+                this.results = new SObjectInsertValidator(this.results).getValidatedResult();
+                Map<SObjectType, List<SObject>> sobjectsGroupedByType = this.groupSobjectsByType(this.results);
+                for (List<SObject> sobjectsToInsert : sobjectsGroupedByType.values()) {
+                    Database.insert(sobjectsToInsert, isAllOrNothing);
+                }
             } catch (Exception ex) {
                 Database.rollback(savepoint);
                 System.debug(ex.getStackTraceString());
@@ -81,8 +85,11 @@ public with sharing class Dml {
                 if (this.results.isEmpty()) {
                     return this;
                 }
-                this.results = new SObjectUpdateValidator(this.results).getValidateResult();
-                Database.update(this.results, isAllOrNothing);
+                this.results = new SObjectUpdateValidator(this.results).getValidatedResult();
+                Map<SObjectType, List<SObject>> sobjectsGroupedByType = this.groupSobjectsByType(this.results);
+                for (List<SObject> sobjectsToUpdate : sobjectsGroupedByType.values()) {
+                    Database.update(sobjectsToUpdate, isAllOrNothing);
+                }
             } catch (Exception ex) {
                 Database.rollback(savepoint);
                 System.debug(ex.getStackTraceString());
@@ -93,6 +100,28 @@ public with sharing class Dml {
         }
 
         public SoqlValidator secureUpsert(Boolean isAllOrNothing) {
+            Savepoint savepoint = Database.setSavepoint();
+            try {
+                if (this.results.isEmpty()) {
+                    return this;
+                }
+                List<SObject> sobjectsToInsert = this.getSobjectsToInsert(this.results);
+                List<SObject> sObjectsToUpdate = this.getSobjectsToUpdate(this.results);
+                sobjectsToInsert = new SObjectInsertValidator(sobjectsToInsert).getValidatedResult();
+                sObjectsToUpdate = new SObjectUpdateValidator(sObjectsToUpdate).getValidatedResult();
+                this.results = new List<SObject>();
+                this.results.addAll(sobjectsToInsert);
+                this.results.addAll(sObjectsToUpdate);
+                Map<SObjectType, List<SObject>> sobjectsGroupedByType = this.groupSobjectsByType(this.results);
+                for (List<SObject> sobjectsToUpsert : sobjectsGroupedByType.values()) {
+                    Database.upsert(sobjectsToUpsert, isAllOrNothing);
+                }
+            } catch (Exception ex) {
+                Database.rollback(savepoint);
+                System.debug(ex.getStackTraceString());
+                System.debug(ex.getMessage());
+                throw new AuraHandledException(ex.getMessage());
+            }
             return this;
         }
 
@@ -102,6 +131,42 @@ public with sharing class Dml {
 
         public List<SObject> getResults() {
             return this.results;
+        }
+
+        private Map<SObjectType, List<SObject>> groupSobjectsByType(List<SObject> sObjects) {
+            Map<SObjectType, List<SObject>> result = new Map<SObjectType, List<SObject>>();
+            for (SObject sobj : sObjects) {
+                SObjectType sobjType = sobj.getSObjectType();
+                if (!result.containsKey(sobjType)) {
+                    result.put(sobjType, this.buildTypedList(sobjType));
+                }
+                result.get(sobjType).add(sobj);
+            }
+            return result;
+        }
+
+        private List<SObject> buildTypedList(SObjectType listType) {
+            return (List<SObject>) Type.forName('List<' + listType + '>').newInstance();
+        }
+
+        private List<SObject> getSobjectsToInsert(List<SObject> sobjects) {
+            List<SObject> result = new List<SObject>();
+            for (SObject sobj : sobjects) {
+                if (String.isEmpty(sobj.Id)) {
+                    result.add(sobj);
+                }
+            }
+            return result;
+        }
+
+        private List<SObject> getSobjectsToUpdate(List<SObject> sobjects) {
+            List<SObject> result = new List<SObject>();
+            for (SObject sobj : sobjects) {
+                if (String.isNotEmpty(sobj.Id)) {
+                    result.add(sobj);
+                }
+            }
+            return result;
         }
     }
 
@@ -121,7 +186,7 @@ public with sharing class Dml {
             this.checkFieldsAccess();
         }
 
-        public virtual List<SObject> getValidateResult() {
+        public virtual List<SObject> getValidatedResult() {
             this.checkObjectAccess();
             this.checkFieldsAccess();
             return this.sObjectsToValidate;
