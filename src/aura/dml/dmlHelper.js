@@ -2,10 +2,10 @@
  * Created by 4an70 on 9/16/2018.
  */
 ({
-    buildDmlObject: function(cmp, helper) {
+    buildDmlObject: function (cmp, helper) {
         return {
             query: (query) => {
-                return new Promise($A.getCallback(function (resolve, reject) {
+                return new Promise($A.getCallback((resolve, reject) => {
                     const action = cmp.get("c.dmlQuery");
                     action.setParams({"query": query});
                     action.setCallback(this, result => {
@@ -24,7 +24,7 @@
             },
 
             update: (sobjects, isAllOrNothing = true) => {
-                return new Promise($A.getCallback(function (resolve, reject) {
+                return new Promise($A.getCallback((resolve, reject) => {
                     const action = cmp.get("c.dmlUpdate");
                     if (!$A.util.isArray(sobjects)) {
                         sobjects = [sobjects];
@@ -46,13 +46,12 @@
             },
 
             insert: (sobjects, isAllOrNothing = true) => {
-                return new Promise($A.getCallback(function (resolve, reject) {
+                return new Promise($A.getCallback((resolve, reject) => {
                     const action = cmp.get("c.dmlInsert");
                     if (!$A.util.isArray(sobjects)) {
                         sobjects = [sobjects];
                     }
                     sobjects = JSON.stringify(sobjects);
-                    console.log(sobjects);
                     action.setParams({"sObjects": sobjects, "isAllOrNothing": isAllOrNothing});
                     action.setCallback(this, result => {
                         let state = result.getState();
@@ -70,7 +69,7 @@
             },
 
             upsert: (sobjects, isAllOrNothing = true) => {
-                return new Promise($A.getCallback(function (resolve, reject) {
+                return new Promise($A.getCallback((resolve, reject) => {
                     const action = cmp.get("c.dmlUpsert");
                     if (!$A.util.isArray(sobjects)) {
                         sobjects = [sobjects];
@@ -93,14 +92,29 @@
             },
 
             delete: (sobjects, isAllOrNothing = true) => {
-                return new Promise($A.getCallback(function (resolve, reject) {
+                return new Promise($A.getCallback((resolve, reject) => {
                     const action = cmp.get("c.dmlDelete");
                     if (!$A.util.isArray(sobjects)) {
                         sobjects = [sobjects];
                     }
-                    if (sobjects.every(item => {return typeof item === "string"})) {
-                        sobjects = sobjects.map(sobjectId => {return {Id: sobjectId}});
-                    }
+                    sobjects = sobjects.map(sobject => {
+                        if (typeof sobject === "string") {
+                            return sobject;
+                        } else if (typeof sobject === "object") {
+                            if (sobject.hasOwnProperty("id")) {
+                                return sobject.id;
+                            } else if (sobject.hasOwnProperty("Id")) {
+                                return sobject.Id;
+                            }
+                        }
+                    });
+                    let uniqueIds = [];
+                    sobjects.forEach(sobject => {
+                        if (!$A.util.isUndefinedOrNull(sobject) && !uniqueIds.includes(sobject)) {
+                            uniqueIds.push(sobject);
+                        }
+                    });
+                    sobjects = uniqueIds.map(uniqueId => { return {Id: uniqueId};});
                     action.setParams({"sObjects": sobjects, "isAllOrNothing": isAllOrNothing});
                     action.setCallback(this, result => {
                         let state = result.getState();
@@ -119,12 +133,12 @@
         };
     },
 
-    handleExceptionToast: function(response, helper) {
+    handleExceptionToast: function (response, helper) {
         let errorMessage = helper.extractErrorMessage(response);
         console.log(errorMessage);
         let toastEvent = $A.get("e.force:showToast");
         toastEvent.setParams({
-            title : "Dml operation failed",
+            title: "Dml operation failed",
             message: errorMessage,
             duration: 7000,
             type: "error",
@@ -133,12 +147,12 @@
         toastEvent.fire();
     },
 
-    extractErrorMessage: function(response) {
+    extractErrorMessage: function (response) {
         let errorMessage = "Unexpected error";
         let state = response.getState();
         if (state === "INCOMPLETE") {
             errorMessage = "Operation was not completed";
-        } else if (state === "ERROR"){
+        } else if (state === "ERROR") {
             let errors = response.getError();
             if (errors && errors[0] && errors[0].message) {
                 errorMessage = errors[0].message;

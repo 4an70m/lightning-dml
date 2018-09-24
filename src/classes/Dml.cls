@@ -28,7 +28,9 @@ public with sharing class Dml {
 
     @AuraEnabled
     public static List<SObject> dmlDelete(List<SObject> sObjects, Boolean isAllOrNothing) {
-        return null;
+        System.debug(sObjects);
+        System.debug(sObjects[0]);
+        return new SoqlValidator(sObjects).secureDelete(isAllOrNothing).getResults();
     }
 
     public class SoqlValidator {
@@ -126,6 +128,22 @@ public with sharing class Dml {
         }
 
         public SoqlValidator secureDelete(Boolean isAllOrNothing) {
+            Savepoint savepoint = Database.setSavepoint();
+            try {
+                if (this.results.isEmpty()) {
+                    return this;
+                }
+                this.results = new SObjectDeleteValidator(this.results).getValidatedResult();
+                Map<SObjectType, List<SObject>> sobjectsGroupedByType = this.groupSobjectsByType(this.results);
+                for (List<SObject> sobjectsToInsert : sobjectsGroupedByType.values()) {
+                    Database.delete(sobjectsToInsert, isAllOrNothing);
+                }
+            } catch (Exception ex) {
+                Database.rollback(savepoint);
+                System.debug(ex.getStackTraceString());
+                System.debug(ex.getMessage());
+                throw new AuraHandledException(ex.getMessage());
+            }
             return this;
         }
 
@@ -351,6 +369,25 @@ public with sharing class Dml {
             }
             Type sobjectType = Type.forName(sobj.getSObjectType().getDescribe().getName());
             return (SObject) JSON.deserialize(JSON.serialize(sobjectPopulatedFields), sobjectType);
+        }
+    }
+
+    public class SObjectDeleteValidator extends SObjectValidator {
+
+        public SObjectDeleteValidator(List<SObject> sObjectsToValidate) {
+            super(sObjectsToValidate);
+        }
+
+        protected override void checkObjectAccess() {
+            for (SObject sobj : this.sObjectsToValidate) {
+                DescribeSObjectResult sobjectDescribe = sobj.getSObjectType().getDescribe();
+                if (!sobjectDescribe.isAccessible() || !sobjectDescribe.isDeletable()) {
+                    throw new System.NoAccessException();
+                }
+            }
+        }
+
+        protected override void checkFieldsAccess() {
         }
     }
 }
