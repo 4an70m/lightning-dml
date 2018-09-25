@@ -4,6 +4,6 @@
 ({
     doInit: function (cmp, evt, helper) {
         window.dml = helper.buildDmlObject(cmp, helper);
-        window.sObject = helper.buildNewSobjectFunction;
+        window.SObject = helper.buildNewSobjectFunction;
     }
 })
