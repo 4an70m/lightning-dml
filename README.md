@@ -58,14 +58,28 @@ yourFunction: function(cmp, evt, helper) {
     ...
 }
 ```
+
+__Delete__:
+```js
+yourFunction: function(cmp, evt, helper) {
+    ...
+    let accountsToDelete = ["recordId", {Id: "recordId"}, {id: "recordId"}];
+    dml.delete(accountsToDelete)
+        console.log(result);
+    }));
+    ...
+}
+```
+
 ### Todos
 
- - Add other actions of CRUD (delete) (75%)
+ - Add other actions of CRUD (aggregate functions) (95%)
  - Add CRUD actions result response
- - Refactor apex class (45%)
+ - Refactor apex class (55%)
  - Update reject error message
- - Update readme (40%)
- - Add apex tests
+ - Update readme (50%)
+ - Add Apex tests
+ - Add JS tests
 
 License
 ----
