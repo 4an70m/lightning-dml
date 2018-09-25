@@ -23,12 +23,13 @@
                 }))
             },
 
-            update: (sobjects, isAllOrNothing = true) => {
+            insert: (sobjects, isAllOrNothing = true) => {
                 return new Promise($A.getCallback((resolve, reject) => {
-                    const action = cmp.get("c.dmlUpdate");
+                    const action = cmp.get("c.dmlInsert");
                     if (!$A.util.isArray(sobjects)) {
                         sobjects = [sobjects];
                     }
+                    sobjects = JSON.stringify(sobjects);
                     action.setParams({"sObjects": sobjects, "isAllOrNothing": isAllOrNothing});
                     action.setCallback(this, result => {
                         let state = result.getState();
@@ -45,13 +46,12 @@
                 }));
             },
 
-            insert: (sobjects, isAllOrNothing = true) => {
+            update: (sobjects, isAllOrNothing = true) => {
                 return new Promise($A.getCallback((resolve, reject) => {
-                    const action = cmp.get("c.dmlInsert");
+                    const action = cmp.get("c.dmlUpdate");
                     if (!$A.util.isArray(sobjects)) {
                         sobjects = [sobjects];
                     }
-                    sobjects = JSON.stringify(sobjects);
                     action.setParams({"sObjects": sobjects, "isAllOrNothing": isAllOrNothing});
                     action.setCallback(this, result => {
                         let state = result.getState();
@@ -131,6 +131,10 @@
                 }));
             }
         };
+    },
+
+    buildNewSobjectFunction: function(sobjectType, fields) {
+        return Object.assign({"attributes": {"type": sobjectType}}, fields);
     },
 
     handleExceptionToast: function (response, helper) {
