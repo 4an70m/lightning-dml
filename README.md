@@ -25,7 +25,7 @@ __Insert__:
 ```js
 yourFunction: function(cmp, evt, helper) {
     ...
-    let accountToInsert = {"attributes":{"type":"Account"}, "Name": "Test"};
+    let accountToInsert = new SObject("Account", {Name: "Test"});
     dml.insert(accountToInsert)
     .then($A.getCallback(result => {
         console.log(result); //[{Id: "new_record_id", Name: "Test"}]
@@ -38,7 +38,8 @@ __Update__:
 ```js
 yourFunction: function(cmp, evt, helper) {
     ...
-    dml.update({Id: "recordId", Name: "New name"})
+    let accountToUpdate = new SObject("Account", {Name: "New name", Id: "record_Id"});
+    dml.update(accountToUpdate)
     .then($A.getCallback(result => {
         console.log(result);
     }));
@@ -50,8 +51,8 @@ __Usert__:
 ```js
 yourFunction: function(cmp, evt, helper) {
     ...
-    let accountToInsert = {"attributes":{"type":"Account"}, "Name": "Test"};
-    let accountToUpdate = {"attributes":{"type":"Account"}, "Id": "recordId", "Name": "Test"};
+    let accountToInsert = new SObject("Account", {Name: "Test"});
+    let accountToUpdate = new SObject("Account", {Id: "record_Id", Name: "Test"});
     dml.upsert([accountToUpdate, accountToInsert])
         console.log(result);
     }));
@@ -63,7 +64,7 @@ __Delete__:
 ```js
 yourFunction: function(cmp, evt, helper) {
     ...
-    let accountsToDelete = ["recordId", {Id: "recordId"}, {id: "recordId"}];
+    let accountsToDelete = ["recordId", {Id: "record_Id"}, {id: "record_Id"}];
     dml.delete(accountsToDelete)
         console.log(result);
     }));
@@ -73,13 +74,13 @@ yourFunction: function(cmp, evt, helper) {
 
 ### Todos
 
- - Add other actions of CRUD (aggregate functions) (95%)
- - Add CRUD actions result response
+ - Add other actions of CRUD (aggregate functions?) (95%)
  - Refactor apex class (55%)
- - Update reject error message
- - Update readme (50%)
- - Add Apex tests
- - Add JS tests
+ - Update readme (60%)
+ - Add Apex tests (20%)
+ - Add JS Docs
+ - Build packages
+ - Add JS tests (?)
 
 License
 ----
