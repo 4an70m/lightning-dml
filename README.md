@@ -28,7 +28,7 @@ yourFunction: function(cmp, evt, helper) {
     let accountToInsert = new SObject("Account", {Name: "Test"});
     dml.insert(accountToInsert)
     .then($A.getCallback(result => {
-        console.log(result); //[{Id: "new_record_id", Name: "Test"}]
+        console.log(result);
     }));
     ...
 }
@@ -54,6 +54,7 @@ yourFunction: function(cmp, evt, helper) {
     let accountToInsert = new SObject("Account", {Name: "Test"});
     let accountToUpdate = new SObject("Account", {Id: "record_Id", Name: "Test"});
     dml.upsert([accountToUpdate, accountToInsert])
+    .then($A.getCallback(result => {
         console.log(result);
     }));
     ...
@@ -66,6 +67,7 @@ yourFunction: function(cmp, evt, helper) {
     ...
     let accountsToDelete = ["recordId", {Id: "record_Id"}, {id: "record_Id"}];
     dml.delete(accountsToDelete)
+    .then($A.getCallback(result => {
         console.log(result);
     }));
     ...
