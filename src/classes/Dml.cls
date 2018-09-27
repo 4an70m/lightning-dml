@@ -206,9 +206,6 @@ public with sharing class Dml {
 
         private List<SObject> sObjectsToValidate;
 
-        public SObjectValidator() {
-        }
-
         public SObjectValidator(List<SObject> sObjectsToValidate) {
             this.sObjectsToValidate = sObjectsToValidate;
         }
@@ -245,9 +242,6 @@ public with sharing class Dml {
         public SObjectReadValidator(List<SObject> sObjectsToValidate) {
             super(sObjectsToValidate);
             this.sObjectType = sObjectsToValidate.getSObjectType();
-            if (this.sObjectType == null && !this.sObjectsToValidate.isEmpty()) {
-                this.sObjectType = this.sObjectsToValidate[0].getSObjectType();
-            }
             this.describedSObjectType = this.sObjectType.getDescribe();
         }
 
@@ -343,7 +337,7 @@ public with sharing class Dml {
         protected override void checkObjectAccess() {
             for (SObject sobj : this.sObjectsToValidate) {
                 DescribeSObjectResult sobjectDescribe = sobj.getSObjectType().getDescribe();
-                if (!sobjectDescribe.isAccessible() || !sobjectDescribe.isQueryable()) {
+                if (!sobjectDescribe.isAccessible() || !sobjectDescribe.isUpdateable()) {
                     throw new System.NoAccessException();
                 }
             }
@@ -406,32 +400,32 @@ public with sharing class Dml {
         @AuraEnabled public String dmlType;
         @AuraEnabled public Boolean isSuccess;
         @AuraEnabled public List<SObject> records;
-        @AuraEnabled public List<DmlRecordResult> dmlResults;
+        @AuraEnabled public List<DmlRecordResult> dmlRecordResults;
 
         public DmlResult(DmlType type) {
             this.dmlType = type.name();
             this.records = new List<SObject>();
-            this.dmlResults = new List<DmlRecordResult>();
+            this.dmlRecordResults = new List<DmlRecordResult>();
             this.isSuccess = true;
         }
 
         public void addDmlResults(List<SObject> sobjectsToInsert, List<Database.SaveResult> saveResults) {
             for (Integer i = 0; i < sobjectsToInsert.size(); i++) {
-                this.dmlResults.add(new DmlRecordResult(sobjectsToInsert[i], saveResults[i]));
+                this.dmlRecordResults.add(new DmlRecordResult(sobjectsToInsert[i], saveResults[i]));
             }
             this.recalculateIsSuccess();
         }
 
         public void addDmlResults(List<SObject> sobjectsToUpdate, List<Database.UpsertResult> saveResults) {
             for (Integer i = 0; i < sobjectsToUpdate.size(); i++) {
-                this.dmlResults.add(new DmlRecordResult(sobjectsToUpdate[i], saveResults[i]));
+                this.dmlRecordResults.add(new DmlRecordResult(sobjectsToUpdate[i], saveResults[i]));
             }
             this.recalculateIsSuccess();
         }
 
         public void addDmlResults(List<SObject> sobjectsToDelete, List<Database.DeleteResult> saveResults) {
             for (Integer i = 0; i < sobjectsToDelete.size(); i++) {
-                this.dmlResults.add(new DmlRecordResult(sobjectsToDelete[i], saveResults[i]));
+                this.dmlRecordResults.add(new DmlRecordResult(sobjectsToDelete[i], saveResults[i]));
             }
             this.recalculateIsSuccess();
         }
@@ -440,7 +434,7 @@ public with sharing class Dml {
             if (!this.isSuccess) {
                 return;
             }
-            for (DmlRecordResult dmlRecordResult : this.dmlResults) {
+            for (DmlRecordResult dmlRecordResult : this.dmlRecordResults) {
                 if (!dmlRecordResult.isSuccess) {
                     this.isSuccess = false;
                     break;
@@ -461,6 +455,7 @@ public with sharing class Dml {
             this.record = record;
             this.id = saveResult.getId();
             this.isSuccess = saveResult.isSuccess();
+            this.isCreated = saveResult.isSuccess();
             this.errors = this.convertErrors(saveResult.getErrors());
         }
 
@@ -475,6 +470,7 @@ public with sharing class Dml {
         public DmlRecordResult(SObject record, Database.DeleteResult deleteResult) {
             this.record = record;
             this.id = deleteResult.getId();
+            this.isCreated = false;
             this.isSuccess = deleteResult.isSuccess();
             this.errors = this.convertErrors(deleteResult.getErrors());
         }
