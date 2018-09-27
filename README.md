@@ -77,9 +77,9 @@ yourFunction: function(cmp, evt, helper) {
 ### Todos
 
  - Add other actions of CRUD (aggregate functions?) (95%)
- - Refactor apex class (55%)
+ - Refactor apex class (75%)
  - Update readme (60%)
- - Add Apex tests (20%)
+ - Add Apex tests (95%)
  - Add JS Docs
  - Build packages
  - Add JS tests (?)
