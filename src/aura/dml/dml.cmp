@@ -1,7 +1,7 @@
 <!--
     MIT License
 
-    Copyright (c) 2017 Oleksii Fisher
+    Copyright (c) 2018 Oleksii Fisher
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -26,5 +26,6 @@
 
     <aura:attribute name="showErrorToast" type="Boolean" access="public" default="true" required="false"
                     description="Determines if dml actions with errors will be handled with an apex toast message"/>
+
     <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
 </aura:component>

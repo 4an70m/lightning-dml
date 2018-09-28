@@ -1,7 +1,7 @@
 /**
      MIT License
 
-     Copyright (c) 2017 Oleksii Fisher
+     Copyright (c) 2018 Oleksii Fisher
 
      Permission is hereby granted, free of charge, to any person obtaining a copy
      of this software and associated documentation files (the "Software"), to deal
@@ -22,6 +22,20 @@
      SOFTWARE.
  */
 ({
+    /**
+     * Init function, which writes dml object and SObject function to global window.
+     * Allows access to both object and method without any additional namespaces:
+     * @example
+     * yourFunction: function(cmp, evt, helper) {
+     *     ...
+     *     let newAccount = new SObject(...);
+     *     dml.insert(...)
+     *     ...
+     *
+     * @param cmp
+     * @param evt
+     * @param helper
+     */
     doInit: function (cmp, evt, helper) {
         window.dml = helper.buildDmlObject(cmp, helper);
         window.SObject = helper.buildNewSobjectFunction;
