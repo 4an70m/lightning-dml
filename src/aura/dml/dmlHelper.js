@@ -30,6 +30,7 @@
      * @returns object for dml operations
      */
     buildDmlObject: function (cmp, helper) {
+        helper.buildNoCallbackPromise(cmp);
         return Object.freeze({
             /**
              * Performs query dml operation based on the query param.
@@ -48,7 +49,7 @@
              * @returns {Promise<any>} - promise with response or error
              */
             query: (query) => {
-                return new Promise($A.getCallback((resolve, reject) => {
+                return new cmp.NoCallbackPromise($A.getCallback((resolve, reject) => {
                     const action = cmp.get("c.dmlQuery");
                     action.setParams({"query": query});
                     action.setCallback(this, result => {
@@ -85,7 +86,7 @@
              * @returns {Promise<any>} - promise with response or error
              */
             insert: (sobjects, isAllOrNothing = true) => {
-                return new Promise($A.getCallback((resolve, reject) => {
+                return new cmp.NoCallbackPromise($A.getCallback((resolve, reject) => {
                     const action = cmp.get("c.dmlInsert");
                     if (!$A.util.isArray(sobjects)) {
                         sobjects = [sobjects];
@@ -126,7 +127,7 @@
              * @returns {Promise<any>} - promise with response or error
              */
             update: (sobjects, isAllOrNothing = true) => {
-                return new Promise($A.getCallback((resolve, reject) => {
+                return new cmp.NoCallbackPromise($A.getCallback((resolve, reject) => {
                     const action = cmp.get("c.dmlUpdate");
                     if (!$A.util.isArray(sobjects)) {
                         sobjects = [sobjects];
@@ -169,7 +170,7 @@
              * @returns {Promise<any>} - promise with response or error
              */
             upsert: (sobjects, isAllOrNothing = true) => {
-                return new Promise($A.getCallback((resolve, reject) => {
+                return new cmp.NoCallbackPromise($A.getCallback((resolve, reject) => {
                     const action = cmp.get("c.dmlUpsert");
                     if (!$A.util.isArray(sobjects)) {
                         sobjects = [sobjects];
@@ -214,7 +215,7 @@
              * @returns {Promise<any>} - promise with response or error
              */
             delete: (sobjects, isAllOrNothing = true) => {
-                return new Promise($A.getCallback((resolve, reject) => {
+                return new cmp.NoCallbackPromise($A.getCallback((resolve, reject) => {
                     const action = cmp.get("c.dmlDelete");
                     if (!$A.util.isArray(sobjects)) {
                         sobjects = [sobjects];
@@ -305,5 +306,34 @@
             }
         }
         return errorMessage;
+    },
+    
+    buildNoCallbackPromise: function (cmp) {
+        class NoCallbackPromise extends Promise {
+            then(onSuccess, onError) {
+                super.then(
+                    (onSuccess ?  $A.getCallback(onSuccess) : undefined),
+                    (onError ?  $A.getCallback(onError) : undefined)
+                );
+                return this;
+            }
+
+            catch(onError) {
+                this.then(undefined, onError);
+                return this;
+            }
+
+            finally(onFinally) {
+                super.finally(
+                    onFinally ? $A.getCallback(onFinally) : undefined
+                );
+            }
+        }
+        Object.defineProperty(cmp, 'NoCallbackPromise', {
+            writable: false,
+            configurable: false,
+            enumerable: false,
+            value: NoCallbackPromise
+        });
     }
 })
