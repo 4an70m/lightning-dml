@@ -30,7 +30,7 @@
      * @returns object for dml operations
      */
     buildDmlObject: function (cmp, helper) {
-        return {
+        return Object.freeze({
             /**
              * Performs query dml operation based on the query param.
              *
@@ -252,7 +252,7 @@
                     $A.enqueueAction(action);
                 }));
             }
-        };
+        });
     },
 
     /**
@@ -273,7 +273,7 @@
      *
      * @param {string} sobjectType - name of sobject type
      * @param {object} fields - object with field name - values
-     * @returns {string} sobject - json object, with assigned sobject type
+     * @returns {object} sobject - json object, with assigned sobject type
      */
     buildNewSobjectFunction: function(sobjectType, fields) {
         return Object.assign({"attributes": {"type": sobjectType}}, fields);

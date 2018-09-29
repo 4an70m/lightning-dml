@@ -37,7 +37,17 @@
      * @param helper
      */
     doInit: function (cmp, evt, helper) {
-        window.dml = helper.buildDmlObject(cmp, helper);
-        window.SObject = helper.buildNewSobjectFunction;
+        Object.defineProperty(window, 'dml', {
+            writable: false,
+            configurable: false,
+            enumerable: false,
+            value: helper.buildDmlObject(cmp, helper)
+        });
+        Object.defineProperty(window, 'SObject', {
+            writable: false,
+            configurable: false,
+            enumerable: false,
+            value: helper.buildNewSobjectFunction
+        });
     }
 })
