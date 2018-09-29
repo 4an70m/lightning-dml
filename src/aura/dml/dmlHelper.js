@@ -39,7 +39,7 @@
              * .then($A.getCallback(result => {
              *     console.log(result); //[{Id='record_Id'}, ...]
              * }))
-             * .reject($A.getCallback(result => {
+             * .catch($A.getCallback(result => {
              *     console.log(result); //full response
              *     //to get errors use result.getErrors();
              * }));
@@ -75,7 +75,7 @@
              * .then($A.getCallback(result => {
              *     console.log(result); //returns DmlResult object - type: DML_INSERT
              * }))
-             * .reject($A.getCallback(result => {
+             * .catch($A.getCallback(result => {
              *     console.log(result); //full response
              *     //to get errors use result.getErrors();
              * }));
@@ -116,7 +116,7 @@
              * .then($A.getCallback(result => {
              *     console.log(result); //returns DmlResult object - type: DML_UPDATE
              * }))
-             * .reject($A.getCallback(result => {
+             * .catch($A.getCallback(result => {
              *     console.log(result); //full response
              *     //to get errors use result.getErrors();
              * }));
@@ -158,7 +158,7 @@
              * .then($A.getCallback(result => {
              *     console.log(result); //returns DmlResult object - type: DML_UPSERT
              * }))
-             * .reject($A.getCallback(result => {
+             * .catch($A.getCallback(result => {
              *     console.log(result); //full response
              *     //to get errors use result.getErrors();
              * }));
@@ -204,7 +204,7 @@
              * .then($A.getCallback(result => {
              *     console.log(result); //returns DmlResult object - type: DML_DELETE
              * }))
-             * .reject($A.getCallback(result => {
+             * .catch($A.getCallback(result => {
              *     console.log(result); //full response
              *     //to get errors use result.getErrors();
              * }));
