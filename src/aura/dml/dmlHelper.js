@@ -257,57 +257,14 @@
     },
 
     /**
-     * Function, which builds an apex-friendly sobject based on the type.
-     * It's a convenient wrapper function, which allows to create SObjects
-     * more naturally.
+     * Function, which creates an extension to the Promise object.
+     * Allows to perform Promises, without calling to $A.getCallback()
+     * in then(), catch(), finally() standard Promise methods.
      *
-     * Because of this function instead of writing:
-     * let mySobject = {{"attributes": {"type": "Account"}}, "field1": value, "field2": value...};
+     * Writes the new NoCallbackPromise to the cmp.
      *
-     * You may write like this:
-     * @example
-     * let mySobject = new SObject("Account", {"field1": value, "field2": value...});
-     * Or
-     * @example
-     * let mySobject = SObject("Account", {"field1": value, "field2": value...});
-     *
-     *
-     * @param {string} sobjectType - name of sobject type
-     * @param {object} fields - object with field name - values
-     * @returns {object} sobject - json object, with assigned sobject type
+     * @param cmp
      */
-    buildNewSobjectFunction: function(sobjectType, fields) {
-        return Object.assign({"attributes": {"type": sobjectType}}, fields);
-    },
-
-    handleExceptionToast: function (response, helper) {
-        let errorMessage = helper.extractErrorMessage(response);
-        console.log(errorMessage);
-        let toastEvent = $A.get("e.force:showToast");
-        toastEvent.setParams({
-            title: "Dml operation failed",
-            message: errorMessage,
-            duration: 7000,
-            type: "error",
-            mode: "dismissible"
-        });
-        toastEvent.fire();
-    },
-
-    extractErrorMessage: function (response) {
-        let errorMessage = "Unexpected error";
-        let state = response.getState();
-        if (state === "INCOMPLETE") {
-            errorMessage = "Operation was not completed";
-        } else if (state === "ERROR") {
-            let errors = response.getError();
-            if (errors && errors[0] && errors[0].message) {
-                errorMessage = errors[0].message;
-            }
-        }
-        return errorMessage;
-    },
-    
     buildNoCallbackPromise: function (cmp) {
         class NoCallbackPromise extends Promise {
             then(onSuccess, onError) {
@@ -335,5 +292,74 @@
             enumerable: false,
             value: NoCallbackPromise
         });
+    },
+
+    /**
+     * Function, which builds an apex-friendly sobject based on the type.
+     * It's a convenient wrapper function, which allows to create SObjects
+     * more naturally.
+     *
+     * Because of this function instead of writing:
+     * let mySobject = {{"attributes": {"type": "Account"}}, "field1": value, "field2": value...};
+     *
+     * You may write like this:
+     * @example
+     * let mySobject = new SObject("Account", {"field1": value, "field2": value...});
+     * Or
+     * @example
+     * let mySobject = SObject("Account", {"field1": value, "field2": value...});
+     *
+     *
+     * @param {string} sobjectType - name of sobject type
+     * @param {object} fields - object with field name - values
+     * @returns {object} sobject - json object, with assigned sobject type
+     */
+    buildNewSobjectFunction: function(sobjectType, fields) {
+        return Object.assign({"attributes": {"type": sobjectType}}, fields);
+    },
+
+    /**
+     * Utility method to throw an error toast.
+     * Uses global toast event - e.force:showToast
+     *
+     * @param response
+     * @param helper
+     */
+    handleExceptionToast: function (response, helper) {
+        let errorMessage = helper.extractErrorMessage(response);
+        console.log(errorMessage);
+        let toastEvent = $A.get("e.force:showToast");
+        toastEvent.setParams({
+            title: "Dml operation failed",
+            message: errorMessage,
+            duration: 7000,
+            type: "error",
+            mode: "dismissible"
+        });
+        toastEvent.fire();
+    },
+
+    /**
+     * Utility method to extract error message from server response.
+     * Based on the response status, it extracts different error messages:
+     * -By default the message is "Unexpected error"
+     * -For the incomplete status the message is "Operation was not completed"
+     * -For all the other situations - the error message is retrieved from the response directly with response.getError()
+     *
+     * @param response
+     * @returns {string}
+     */
+    extractErrorMessage: function (response) {
+        let errorMessage = "Unexpected error";
+        let state = response.getState();
+        if (state === "INCOMPLETE") {
+            errorMessage = "Operation was not completed";
+        } else if (state === "ERROR") {
+            let errors = response.getError();
+            if (errors && errors[0] && errors[0].message) {
+                errorMessage = errors[0].message;
+            }
+        }
+        return errorMessage;
     }
 })
