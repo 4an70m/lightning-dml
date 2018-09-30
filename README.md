@@ -14,9 +14,9 @@ __Query__:
 yourFunction: function(cmp, evt, helper) {
     ...
     dml.query("SELECT Id FROM Account")
-    .then($A.getCallback(result => {
+    .then(result => {
         console.log(result);
-    }));
+    });
     ...
 }
 ```
@@ -27,9 +27,9 @@ yourFunction: function(cmp, evt, helper) {
     ...
     let accountToInsert = new SObject("Account", {Name: "Test"});
     dml.insert(accountToInsert)
-    .then($A.getCallback(result => {
+    .then(result => {
         console.log(result);
-    }));
+    });
     ...
 }
 ```
@@ -40,9 +40,9 @@ yourFunction: function(cmp, evt, helper) {
     ...
     let accountToUpdate = new SObject("Account", {Name: "New name", Id: "record_Id"});
     dml.update(accountToUpdate)
-    .then($A.getCallback(result => {
+    .then(result => {
         console.log(result);
-    }));
+    });
     ...
 }
 ```
@@ -54,9 +54,9 @@ yourFunction: function(cmp, evt, helper) {
     let accountToInsert = new SObject("Account", {Name: "Test"});
     let accountToUpdate = new SObject("Account", {Id: "record_Id", Name: "Test"});
     dml.upsert([accountToUpdate, accountToInsert])
-    .then($A.getCallback(result => {
+    .then(result => {
         console.log(result);
-    }));
+    });
     ...
 }
 ```
@@ -67,9 +67,9 @@ yourFunction: function(cmp, evt, helper) {
     ...
     let accountsToDelete = ["recordId", {Id: "record_Id"}, {id: "record_Id"}];
     dml.delete(accountsToDelete)
-    .then($A.getCallback(result => {
+    .then(result => {
         console.log(result);
-    }));
+    });
     ...
 }
 ```
@@ -78,9 +78,9 @@ yourFunction: function(cmp, evt, helper) {
 
  - Add other actions of CRUD (aggregate functions?) (95%)
  - Refactor apex class (75%)
- - Update readme (60%)
+ - Update readme (65%)
  - Add Apex tests (95%)
- - Add JS Docs
+ - Add JS Docs (75%)
  - Build packages
  - Add JS tests (?)
 
