@@ -234,7 +234,7 @@ Also, there's one enumeration with a list of DML types - _DmlType_, used in _Dml
  - Count query not supported due to CRUD and FLS check limitations
  - Aggregation queries are not yet implemented
  
-### Todos
+## Todos
 
  - Add other actions of CRUD (aggregate functions?) (95%)
  - Refactor Apex class (75%)
