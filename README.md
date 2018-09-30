@@ -52,6 +52,7 @@ Performs a single DML operation of inserting a record or list of records in the 
 If an object is not available for the user `!isAccessible() || !isCreateable()`, an exception is thrown.
 If a field is not available for the user - it is removed from the insert operation. 
 If the operations fails somehow, the whole transactions is safePoint-guaranteed to be fully aborted.
+
 ___Method's signature:___
 `dml.insert({object|object[]} sobjects, {boolean} isAllOrNothing = true)`
 
@@ -85,6 +86,7 @@ Performs a single DML operation of updating a record or list of records in the d
 If an object is not available for the user `!isAccessible() || !isUpdateable()`, an exception is thrown.
 If a field is not available for the user - it is removed from the update operation. 
 If the operations fails somehow, the whole transactions is safePoint-guaranteed to be fully aborted.
+
 ___Method's signature:___
 `dml.update({object|object[]} sobjects, {boolean} isAllOrNothing = true)`
 
@@ -115,6 +117,7 @@ Performs a single dml operation of upserting a record or list of records in the 
 If an object is not available for the user `!isAccessible() || !isUpdateable()` or `!isAccessible() || !isCreatable()` - based on the type of operation performed on the record, an exception is thrown.
 If a field is not available for the user - it is removed from the upsert operation. 
 If the operations fails somehow, the whole transactions is safePoint-guaranteed to be fully aborted.
+
 ___Method's signature:___
 `dml.upsert({object|object[]} sobjects, {boolean} isAllOrNothing = true)`
 
@@ -148,6 +151,7 @@ yourFunction: function(cmp, evt, helper) {
 Performs a single DML operation of deleting records in the database, enforcing CRUD.
 If an object is not available for the user `!isAccessible() || !isDeletable()`, an exception is thrown.
 If the operations fails somehow, the whole transactions is safePoint-guaranteed to be fully aborted.
+
 ___Method's signature:___
 `dml.delete({string|object|string[]|object[]} sobjects, {boolean} isAllOrNothing = true)`
 
