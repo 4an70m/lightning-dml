@@ -2,6 +2,14 @@
 Component, which allows you to perform DML operations directly in lightning without using additional Apex controller. Much like `force:recordData`, but more Apex-like, component allows you to perform CRUD operations but with lists of records.
 Included Apex Dml class, handles all the query logic and also checks the object for CRUD accessibility, as well as enforces FLS.
 
+## References
+ - [Query](#query)
+ - [Insert](#insert)
+ - [Update](#update)
+ - [Upsert](#upsert)
+ - [Delete](#delete)
+ - [Dml result](#dml-result)
+
 ## Use-cases
 When writing Lightning component, you might often run into a situation, when you need to call an Apex controller. Normally, you would write an Apex class for this which contains one-two methods: one for the query, the second one for a CRUD operation. This approach enforces us to have multiple tiny Apex controller classes, which serves extremely simple purposes, which flood your list of Apex classes and which requires to be covered by an Apex unit test.
 
@@ -21,6 +29,8 @@ To start using DML operations in Lightning simply include __dml__ component anyw
     ...
 </aura:component>
 ```
+The __dml__ component has a single public boolean attribute - "showErrorToast" defaulted to _true_. It allows component to handle exceptions with a simple toast, provided by e.force:showToast event.
+
 Now you may start performing client-side dml operations!
 
 ### Query:
@@ -51,7 +61,7 @@ yourFunction: function(cmp, evt, helper) {
 Performs a single DML operation of inserting a record or list of records in the database, enforcing CRUD and FLS. New Ids are returned as a part of the response. 
 If an object is not available for the user `!isAccessible() || !isCreateable()`, an exception is thrown.
 If a field is not available for the user - it is removed from the insert operation. 
-If the operations fails somehow, the whole transactions is safePoint-guaranteed to be fully aborted.
+If the operations fails somehow, the whole transactions is safepoint-guaranteed to be fully aborted.
 
 ___Method's signature:___
 `dml.insert({object|object[]} sobjects, {boolean} isAllOrNothing = true)`
@@ -85,7 +95,7 @@ yourFunction: function(cmp, evt, helper) {
 Performs a single DML operation of updating a record or list of records in the database, enforcing CRUD and FLS.
 If an object is not available for the user `!isAccessible() || !isUpdateable()`, an exception is thrown.
 If a field is not available for the user - it is removed from the update operation. 
-If the operations fails somehow, the whole transactions is safePoint-guaranteed to be fully aborted.
+If the operations fails somehow, the whole transactions is safepoint-guaranteed to be fully aborted.
 
 ___Method's signature:___
 `dml.update({object|object[]} sobjects, {boolean} isAllOrNothing = true)`
@@ -116,7 +126,7 @@ yourFunction: function(cmp, evt, helper) {
 Performs a single dml operation of upserting a record or list of records in the database, enforcing CRUD and FLS.
 If an object is not available for the user `!isAccessible() || !isUpdateable()` or `!isAccessible() || !isCreatable()` - based on the type of operation performed on the record, an exception is thrown.
 If a field is not available for the user - it is removed from the upsert operation. 
-If the operations fails somehow, the whole transactions is safePoint-guaranteed to be fully aborted.
+If the operations fails somehow, the whole transactions is safepoint-guaranteed to be fully aborted.
 
 ___Method's signature:___
 `dml.upsert({object|object[]} sobjects, {boolean} isAllOrNothing = true)`
@@ -150,7 +160,7 @@ yourFunction: function(cmp, evt, helper) {
 ### Delete:
 Performs a single DML operation of deleting records in the database, enforcing CRUD.
 If an object is not available for the user `!isAccessible() || !isDeletable()`, an exception is thrown.
-If the operations fails somehow, the whole transactions is safePoint-guaranteed to be fully aborted.
+If the operations fails somehow, the whole transactions is safepoint-guaranteed to be fully aborted.
 
 ___Method's signature:___
 `dml.delete({string|object|string[]|object[]} sobjects, {boolean} isAllOrNothing = true)`
@@ -182,7 +192,7 @@ yourFunction: function(cmp, evt, helper) {
     ...
 }
 ```
-## Dml result
+### Dml result
 DmlResult is the object, you receive as the result of dml operations: insert, update, upsert or delete. The object is represented in Apex by three classes: _Dml.DmlResult, Dml.DmlRecordResult, Dml.DmlError_.
 Example JSON structure:
 ```javascript
