@@ -36,9 +36,9 @@
              * Performs query dml operation based on the query param.
              *
              * @example
-             * dml.query('SELECT Id FROM Account')
+             * dml.query("SELECT Id FROM Account")
              * .then($A.getCallback(result => {
-             *     console.log(result); //[{Id='record_Id'}, ...]
+             *     console.log(result); //[{Id="record_Id"}, ...]
              * }))
              * .catch($A.getCallback(result => {
              *     console.log(result); //full response
@@ -286,7 +286,7 @@
                 );
             }
         }
-        Object.defineProperty(cmp, 'NoCallbackPromise', {
+        Object.defineProperty(cmp, "NoCallbackPromise", {
             writable: false,
             configurable: false,
             enumerable: false,
