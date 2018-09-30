@@ -249,6 +249,9 @@ Also, there's one enumeration with a list of DML types - _DmlType_, used in _Dml
  - Build packages
  - Add JS tests (?)
 
+## Acknowledgement
+- Thanks to [Ruslan Kurchenko](https://github.com/ruslan-kurchenko) and his [Lax](https://github.com/ruslan-kurchenko/sfdc-lax) component for giving insights and inspiration about modified JS Promises.
+
 License
 ----
 
