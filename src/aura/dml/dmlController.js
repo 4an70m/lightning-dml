@@ -37,17 +37,21 @@
      * @param helper
      */
     doInit: function (cmp, evt, helper) {
-        Object.defineProperty(window, 'dml', {
-            writable: false,
-            configurable: false,
-            enumerable: false,
-            value: helper.buildDmlObject(cmp, helper)
-        });
-        Object.defineProperty(window, 'SObject', {
-            writable: false,
-            configurable: false,
-            enumerable: false,
-            value: helper.buildNewSobjectFunction
-        });
+        if ($A.util.isUndefinedOrNull(window.dml)) {
+            Object.defineProperty(window, 'dml', {
+                writable: false,
+                configurable: false,
+                enumerable: false,
+                value: helper.buildDmlObject(cmp, helper)
+            });
+        }
+        if ($A.util.isUndefinedOrNull(window.SObject)) {
+            Object.defineProperty(window, 'SObject', {
+                writable: false,
+                configurable: false,
+                enumerable: false,
+                value: helper.buildNewSobjectFunction
+            });
+        }
     }
 })
