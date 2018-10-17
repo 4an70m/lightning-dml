@@ -63,6 +63,7 @@
                             reject(result);
                         }
                     });
+                    action.setStorable(false);
                     $A.enqueueAction(action);
                 }))
             },
@@ -104,6 +105,7 @@
                             reject(result);
                         }
                     });
+                    action.setStorable(false);
                     $A.enqueueAction(action);
                 }));
             },
@@ -144,6 +146,7 @@
                             reject(result);
                         }
                     });
+                    action.setStorable(false);
                     $A.enqueueAction(action);
                 }));
             },
@@ -188,6 +191,7 @@
                             reject(result);
                         }
                     });
+                    action.setStorable(false);
                     $A.enqueueAction(action);
                 }));
             },
@@ -250,6 +254,7 @@
                             reject(result);
                         }
                     });
+                    action.setStorable(false);
                     $A.enqueueAction(action);
                 }));
             }
